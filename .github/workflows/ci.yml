@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go_version: ['1.21', '1.22'] # Atualizado para versões suportadas
-        os: ['ubuntu-latest', 'ubuntu-22.04'] # Ubuntu 18.04 não existe mais
+        go_version: ['1.21', '1.22']
+        os: ['ubuntu-latest', 'ubuntu-22.04']
     steps:
     - uses: actions/checkout@v4
 
@@ -29,6 +29,10 @@ jobs:
     - name: Create-DB
       run: docker compose up -d
 
+    # ADICIONEI ESTA ETAPA AQUI:
+    - name: Wait for DB to be ready
+      run: sleep 15
+
     - name: Test
       run: go test -v ./...
       
@@ -39,7 +43,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    # Esta etapa estava faltando no seu código original:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
