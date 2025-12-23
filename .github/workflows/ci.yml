@@ -7,14 +7,14 @@ on:
     branches: [ '*' ]
 
 jobs:
-
   test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         go_version: ['1.21', '1.22']
-        os: ['ubuntu-latest', 'ubuntu-22.04']
+        os: ['ubuntu-latest'] # Simplificado para evitar redundância, mas pode manter o 22.04 se desejar
+    
     steps:
     - uses: actions/checkout@v4
 
@@ -23,20 +23,23 @@ jobs:
       with:
         go-version: ${{ matrix.go_version }}
       
-    - name: Build-DB
-      run: docker compose build
-      
     - name: Create-DB
       run: docker compose up -d
 
-    # ADICIONEI ESTA ETAPA AQUI:
     - name: Wait for DB to be ready
-      run: sleep 15
+      # Verifica se o postgres está pronto para receber conexões antes de testar
+      run: |
+        until docker exec postgres_db pg_isready; do
+          echo "Aguardando Postgres iniciar..."
+          sleep 2
+        done
 
     - name: Test
+      # Aqui passamos o HOST=127.0.0.1 para evitar o erro de IPv6 [::1]
+      env:
+        HOST: 127.0.0.1
       run: go test -v ./...
       
-  
   build:
     needs: test
     runs-on: ubuntu-latest
